@@ -17,13 +17,16 @@
     "expo-splash-screen": "^0.18.1",
     "expo-status-bar": "~1.4.4",
     "react": "18.2.0",
-    "react-devtools": "^4.27.4",
+    "react-dom": "^18.2.0",
     "react-native": "0.71.4",
+    "react-native-debugger": "^1.1.0",
+    "react-native-web": "~0.18.11",
     "redux-devtools-extension": "^2.13.9",
     "update": "^0.7.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "react-devtools": "^4.27.4"
   },
   "private": true
 }
