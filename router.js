@@ -10,12 +10,12 @@ import { AntDesign } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 
-import RegistrationScreen from "./src/Screens/Auth/RegistrationScreen";
-import LoginScreen from "./src/Screens/Auth/LoginScreen";
-import PostsScreen from "./src/Screens/Main/PostsScreen";
-import CreatePostsScreen from "./src/Screens/Main/CreatePostsScreen";
-import ProfileScreen from "./src/Screens/Main/ProfileScreen";
-import HomeScreen from "./src/Screens/Main/Home";
+import RegistrationScreen from "./components/Screens/Auth/RegistrationScreen";
+import LoginScreen from "./components/Screens/Auth/LoginScreen";
+import PostsScreen from "./components/Screens/Main/PostsScreen";
+import CreatePostsScreen from "./components/Screens/Main/CreatePostsScreen";
+import ProfileScreen from "./components/Screens/Main/ProfileScreen";
+import HomeScreen from "./components/Screens/Main/Home";
 
 const AuthStack = createStackNavigator();
 const MainTab = createBottomTabNavigator();

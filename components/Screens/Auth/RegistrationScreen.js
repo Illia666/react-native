@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from "react";
+import React, { useState, useCallback } from "react";
 
 import {
   StyleSheet,
@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
+    Button,
 } from "react-native";
 
 import { useFonts } from "expo-font";
@@ -19,11 +20,12 @@ import * as SplashScreen from "expo-splash-screen";
 SplashScreen.preventAutoHideAsync();
 
 const initialState = {
-  emailAddress: "",
+  username: "",
+  emailAdress: "",
   password: "",
 };
 
-const LoginScreen = () => {
+const RegistrationScreen = ({ navigation }) => {
   const [state, setstate] = useState(initialState);
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
   const keyboardHide = () => {
@@ -34,8 +36,8 @@ const LoginScreen = () => {
   };
 
   const [fontsLoaded] = useFonts({
-    RobotoRegular: require("../../assets/fonts/Roboto-Regular.ttf"),
-    RobotoMedium: require("../../assets/fonts/Roboto-Medium.ttf"),
+    RobotoRegular: require("../../../assets/fonts/Roboto-Regular.ttf"),
+    RobotoMedium: require("../../../assets/fonts/Roboto-Medium.ttf"),
   });
 
   const onLayoutRootView = useCallback(async () => {
@@ -53,7 +55,7 @@ const LoginScreen = () => {
       <View style={styles.container}>
         <ImageBackground
           style={styles.image}
-          source={require("../../assets/bg.jpg")}
+          source={require("../../../assets/bg.jpg")}
         >
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -68,10 +70,29 @@ const LoginScreen = () => {
               <View style={styles.imgBox}>
                 <Image
                   style={styles.icon}
-                  source={require("../../assets/add.png")}
+                  source={require("../../../assets/add.png")}
                 />
               </View>
               <View style={styles.form}>
+                <Text style={styles.title}>Реєстрація</Text>
+                <View style={{ marginTop: 32 }}>
+                  <TextInput
+                    style={styles.input}
+                    textAlign={"left"}
+                    placeholder={"Логін"}
+                    placeholderTextColor={"#BDBDBD"}
+                    onFocus={() => {
+                      setIsShowKeyboard(true);
+                    }}
+                    value={state.username}
+                    onChangeText={(value) =>
+                      setstate((prevState) => ({
+                        ...prevState,
+                        username: value,
+                      }))
+                    }
+                  ></TextInput>
+                </View>
                 <View style={{ marginTop: 16 }}>
                   <TextInput
                     style={styles.input}
@@ -109,15 +130,18 @@ const LoginScreen = () => {
                       }))
                     }
                   />
-                  <Text style={styles.showPass}>{"Показати"}</Text>
+                  <Text style={styles.showPass}>{"Приховати"}</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.button} onPress={keyboardHide}>
-                <Text style={styles.textButton}>Увійти</Text>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => navigation.navigate("Home")}
+              >
+                <Text style={styles.textButton}>Зареєструватися</Text>
               </TouchableOpacity>
-              <Text style={styles.aside}>
-                Ще немає аккаунта? Зареєструватися
-              </Text>
+              <TouchableOpacity onPress={() => navigation.navigate("Log in")}>
+                <Text style={styles.aside}>Вже є акаунт? Увійти</Text>
+              </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
         </ImageBackground>
@@ -126,7 +150,7 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
+export default RegistrationScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -184,7 +208,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     position: "absolute",
     top: 16,
-    left: 230,
+    left: 220,
     color: "#1B4371",
   },
   button: {

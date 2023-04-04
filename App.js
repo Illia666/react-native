@@ -1,32 +1,10 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, ImageBackground } from "react-native";
+import * as React from "react";
+import { NavigationContainer } from "@react-navigation/native";
 
-import RegistrationScreen from "./.expo/Screens/RegistrationScreen";
-import LoginScreen from "./.expo/Screens/LoginScreen";
+import { useRoute } from "./router";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <RegistrationScreen></RegistrationScreen>
-      {/* <LoginScreen></LoginScreen> */}
-
-      <StatusBar style="auto" />
-    </View>
-  );
+const routing = useRoute(false);
+  return <NavigationContainer>{routing}</NavigationContainer>;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-  },
-  image: {
-    flex: 1,
-    resizeMode: "cover",
-    justifyContent: "center",
-  },
-  text: {
-    color: "#fff",
-  },
-});
