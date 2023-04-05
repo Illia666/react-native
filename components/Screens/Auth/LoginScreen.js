@@ -115,8 +115,11 @@ const LoginScreen = ({ navigation }) => {
               </View>
               <TouchableOpacity
                 style={styles.button}
-                onPress={() => navigation.navigate("Home")}>
-                <Text style={styles.textButton}>Увійти</Text>
+                                onPress={() =>
+                  navigation.navigate("Home", { screen: "PostsScreen" })
+                }
+              >
+              <Text style={styles.textButton}>Увійти</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => navigation.navigate("Register")}>
                 <Text style={styles.aside}>
