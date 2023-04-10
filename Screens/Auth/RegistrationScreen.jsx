@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import {
   StyleSheet,
   View,
@@ -16,14 +17,20 @@ import {
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 
+import { authSignUpUser } from "../../redux/auth/authOperations";
+
 const RegistrationScreen = ({ navigation, route }) => {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
-  const [photo, setPhoto] = useState(null);
+  const [photo, setPhoto] = useState(
+    "https://files.fm/thumb_show.php?i=c6e28ndjn"
+  );
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [hidePass, setHidePass] = useState(true);
+
+  const dispatch = useDispatch();
 
   const loginHandler = (text) => setLogin(text);
   const emailHandler = (text) => setEmail(text);
@@ -33,18 +40,38 @@ const RegistrationScreen = ({ navigation, route }) => {
     (async () => {
       MediaLibrary.requestPermissionsAsync();
     })();
+
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setIsShowKeyboard(true);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setIsShowKeyboard(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
   }, []);
 
-  const onLogin = () => {
-    if (login.trim() === "" || email.trim() === "" || password.trim() === "") {
-      setError("Пожалуйста, заполните все поля для ввода");
-    } else {
-      setError(null);
-      const user = { login, email, password };
-      setLogin("");
-      setEmail("");
-      setPassword("");
-      navigation.navigate("Home", { screen: "DefaultScreen", params: user });
+  const onLogin = async () => {
+    try {
+      if (
+        login.trim() === "" ||
+        email.trim() === "" ||
+        password.trim() === ""
+      ) {
+        setError("Пожалуйста, заполните все поля для ввода");
+      } else {
+        setError(null);
+        const user = { login, email, password, photo };
+        dispatch(authSignUpUser(user));
+        setLogin("");
+        setEmail("");
+        setPassword("");
+      }
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -64,7 +91,6 @@ const RegistrationScreen = ({ navigation, route }) => {
       aspect: [4, 3],
       quality: 1,
     });
-
     if (!result.canceled) {
       setPhoto(result.assets[0].uri);
     }
@@ -102,20 +128,20 @@ const RegistrationScreen = ({ navigation, route }) => {
                     <View>
                       <Image
                         source={require("../../assets/images/add.png")}
-                        style={{ width: 25, height: 25 }}
+                        style={{ width: 30, height: 30 }}
                       />
                     </View>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
-                    style={{ ...styles.btnPlus, left: 100, top: 70 }}
+                    style={styles.btnPlus}
                     activeOpacity={0.7}
                     onPress={() => setPhoto(null)}
                   >
                     <View>
                       <Image
                         source={require("../../assets/images/del.png")}
-                        style={{ width: 40, height: 40 }}
+                        style={{ width: 30, height: 30 }}
                       />
                     </View>
                   </TouchableOpacity>
@@ -252,8 +278,10 @@ const styles = StyleSheet.create({
   },
   btnPlus: {
     position: "absolute",
-    top: 80,
-    left: 107,
+    top: 75,
+    left: 105,
+    backgroundColor: "rgba(0,0,0, 0.2)",
+    borderRadius: 50,
   },
   passwordBtn: {
     position: "absolute",

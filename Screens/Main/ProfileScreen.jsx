@@ -1,24 +1,54 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ImageBackground,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  Image,
-} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { View, StyleSheet, ImageBackground, FlatList } from "react-native";
+import FlatListHeaderProfileScreen from "../../components/FlatListHeaderProfileScreen";
+import Item from "../../components/Item";
 
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 
+import {
+  authSingOutUser,
+  authUpdatePhotoURL,
+} from "../../redux/auth/authOperations";
+
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "../../firebase/config";
+
 const ProfileScreen = ({ navigation }) => {
-  const [photo, setPhoto] = useState(null);
+  const { nickName, userId, photoURL } = useSelector((state) => state.auth);
+  const [photo, setPhoto] = useState(photoURL);
+  const [posts, setPosts] = useState([]);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     (async () => {
       MediaLibrary.requestPermissionsAsync();
     })();
+
+    const q = query(
+      collection(db, "posts"),
+      where("userId", "==", userId),
+      orderBy("date")
+    );
+    const unsubscribe = onSnapshot(q, (data) => {
+      const posts = data.docs.map((post) => ({
+        ...post.data(),
+        id: post.id,
+      }));
+      setPosts(posts);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const pickImage = async () => {
@@ -31,68 +61,57 @@ const ProfileScreen = ({ navigation }) => {
 
     if (!result.canceled) {
       setPhoto(result.assets[0].uri);
+      dispatch(authUpdatePhotoURL(result.assets[0].uri));
     }
+  };
+
+  const signOut = () => {
+    dispatch(authSingOutUser());
+  };
+
+  const deletePhoto = () => {
+    setPhoto(null);
+  };
+
+  const goToComments = (item) => {
+    const { photo, id } = item;
+    navigation.navigate("Comments", { photo, id });
+  };
+
+  const goToMap = (item) => {
+    const { loc, name } = item;
+    navigation.navigate("Map", { loc, name });
   };
 
   return (
     <View style={styles.container}>
       <ImageBackground
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-        }}
+        style={styles.imgBackground}
         source={require("../../assets/images/Photo%20BG.jpg")}
       >
-        <View style={styles.box}>
-          <View style={styles.avatarBox}>
-            <View style={styles.avatar}>
-              {photo ? (
-                <Image source={{ uri: photo }} style={styles.img} />
-              ) : (
-                <View style={styles.noAvatar}></View>
-              )}
-              {!photo ? (
-                <TouchableOpacity
-                  style={styles.btnPlus}
-                  activeOpacity={0.7}
-                  onPress={pickImage}
-                >
-                  <View>
-                    <Image
-                      source={require("../../assets/images/add.png")}
-                      style={{ width: 25, height: 25 }}
-                    />
-                  </View>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={{ ...styles.btnPlus, left: 100, top: 70 }}
-                  activeOpacity={0.7}
-                  onPress={() => setPhoto(null)}
-                >
-                  <View>
-                    <Image
-                      source={require("../../assets/images/del.png")}
-                      style={{ width: 40, height: 40 }}
-                    />
-                  </View>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-          <TouchableWithoutFeedback
-            onPress={() => navigation.navigate("Login")}
-          >
-            <View style={styles.autBtn}>
-              <Image
-                source={require("../../assets/images/log-out.png")}
-                style={{ width: 24, height: 24 }}
+        <View style={styles.bac}></View>
+        <FlatList
+          ListHeaderComponent={
+            <FlatListHeaderProfileScreen
+              photo={photo}
+              pickImage={pickImage}
+              signOut={signOut}
+              nickName={nickName}
+              deletePhoto={deletePhoto}
+            />
+          }
+          data={posts}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.list}>
+              <Item
+                item={item}
+                goToComments={() => goToComments(item)}
+                goToMap={() => goToMap(item)}
               />
             </View>
-          </TouchableWithoutFeedback>
-          <Text style={styles.userName}>Profile Screen</Text>
-        </View>
+          )}
+        />
       </ImageBackground>
     </View>
   );
@@ -101,55 +120,25 @@ const ProfileScreen = ({ navigation }) => {
 export default ProfileScreen;
 
 const styles = StyleSheet.create({
+  imgBackground: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+  },
+  bac: {
+    position: "absolute",
+    top: "35%",
+    width: "100%",
+    height: "65%",
+    backgroundColor: "#FFFFFF",
+  },
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+    paddingBottom: 60,
   },
-  box: {
-    position: "relative",
+  list: {
+    paddingHorizontal: 16,
     backgroundColor: "#FFFFFF",
-    marginTop: 140,
-    height: "100%",
-    borderTopLeftRadius: 25,
-    borderTopEndRadius: 25,
-  },
-  avatarBox: {
-    position: "relative",
-    alignItems: "center",
-  },
-  avatar: {
-    position: "absolute",
-    top: -60,
-    alignItems: "center",
-    width: 120,
-    height: 120,
-    borderRadius: 16,
-  },
-  noAvatar: {
-    backgroundColor: "#F6F6F6",
-    width: "100%",
-    height: "100%",
-    borderRadius: 16,
-  },
-  img: {
-    width: 120,
-    height: 120,
-    borderRadius: 16,
-  },
-  btnPlus: {
-    position: "absolute",
-    top: 80,
-    left: 107,
-  },
-  autBtn: {
-    position: "absolute",
-    top: 22,
-    right: 16,
-  },
-  userName: {
-    marginTop: 92,
-    textAlign: "center",
-    fontFamily: "Roboto-Bold",
-    fontSize: 30,
   },
 });

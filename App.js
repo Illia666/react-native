@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect } from "react";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { NavigationContainer } from "@react-navigation/native";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
 import { View } from "react-native";
+import Main from "./components/Main";
 
 SplashScreen.preventAutoHideAsync();
-
-import { useRoute } from "./router";
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
@@ -37,14 +37,14 @@ export default function App() {
     return null;
   }
 
-  const routing = useRoute();
-
   return (
-    <View
-      style={{ flex: 1, backgroundColor: "#fff" }}
-      onLayout={onLayoutRootView}
-    >
-      <NavigationContainer>{routing}</NavigationContainer>
-    </View>
+    <Provider store={store}>
+      <View
+        style={{ flex: 1, backgroundColor: "#fff" }}
+        onLayout={onLayoutRootView}
+      >
+        <Main />
+      </View>
+    </Provider>
   );
 }

@@ -31,14 +31,9 @@ const HomeScreen = ({ navigation }) => {
         },
         tabBarItemStyle: { borderRadius: 30 },
         headerTitleStyle: {
-          textAlign: "center",
+          marginBottom: 20,
           fontFamily: "Roboto-Bold",
           fontSize: 17,
-        },
-        headerStyle: {
-          borderBottomWidth: 1,
-          borderColor: "#E8E8E8",
-          backgroundColor: "#FFFFFF",
         },
       }}
     >
@@ -47,19 +42,7 @@ const HomeScreen = ({ navigation }) => {
           tabBarIcon: ({ focused, size, color }) => (
             <Feather name="grid" size={size} color={color} />
           ),
-          title: "Публикации",
-          headerRight: () => (
-            <TouchableWithoutFeedback
-              onPress={() => navigation.navigate("Login")}
-            >
-              <View style={{ paddingHorizontal: 15 }}>
-                <Image
-                  source={require("../../assets/images/log-out.png")}
-                  style={{ width: 20, height: 20 }}
-                />
-              </View>
-            </TouchableWithoutFeedback>
-          ),
+          headerShown: false,
         }}
         name="Posts"
         component={PostsScreen}
@@ -69,12 +52,7 @@ const HomeScreen = ({ navigation }) => {
           tabBarIcon: ({ focused, size, color }) => (
             <MaterialIcons name="add" size={size} color={color} />
           ),
-          title: "Создать публикацию",
-          headerTitleStyle: {
-            marginLeft: 50,
-            fontFamily: "Roboto-Bold",
-            fontSize: 17,
-          },
+          headerShown: false,
           tabBarStyle: { display: "none" },
         }}
         name="Create"

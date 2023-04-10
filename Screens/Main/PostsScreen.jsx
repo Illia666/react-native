@@ -10,33 +10,18 @@ const PostsScreen = () => {
   return (
     <NestedScreen.Navigator
       screenOptions={{
-        headerStyle: {
-          borderBottomWidth: 1,
-          borderColor: "#E8E8E8",
-          backgroundColor: "#FFFFFF",
-        },
-        headerTitleStyle: {
-          textAlign: "center",
-          fontFamily: "Roboto-Bold",
-          fontSize: 17,
+        headerShown: false,
+        cardStyle: {
+          backgroundColor: "#fff",
         },
       }}
     >
       <NestedScreen.Screen
         name="DefaultScreen"
         component={DefaultScreenPosts}
-        options={{ headerShown: false }}
       />
-      <NestedScreen.Screen
-        name="Comments"
-        component={CommentsScreen}
-        options={{ title: "Комментарии" }}
-      />
-      <NestedScreen.Screen
-        name="Map"
-        component={MapScreen}
-        options={{ title: "Карта" }}
-      />
+      <NestedScreen.Screen name="Comments" component={CommentsScreen} />
+      <NestedScreen.Screen name="Map" component={MapScreen} />
     </NestedScreen.Navigator>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import {
   View,
   Text,
@@ -16,16 +17,19 @@ import { Camera, CameraType } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, addDoc } from "firebase/firestore";
+import { storage, db } from "../../firebase/config";
 
 const CreatePostsScreen = ({ navigation }) => {
   const [cameraOn, setCameraOn] = useState(true);
   const [photo, setPhoto] = useState(null);
   const [loc, setLoc] = useState(null);
-  const [hasCamPermission, setHasCamPermission] = useState(false);
-  const [hasLocPermission, setHasLocPermission] = useState(false);
   const [name, setName] = useState("");
   const [place, setPlace] = useState(null);
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
+
+  const { userId, nickName } = useSelector((store) => store.auth);
 
   const nameHandler = (text) => setName(text);
   const placeHandler = (text) => setPlace(text);
@@ -47,12 +51,10 @@ const CreatePostsScreen = ({ navigation }) => {
 
   useEffect(() => {
     (async () => {
-      MediaLibrary.requestPermissionsAsync();
+      await MediaLibrary.requestPermissionsAsync();
       const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasCamPermission(status === "granted");
       const { status: stat } =
         await Location.requestForegroundPermissionsAsync();
-      setHasLocPermission(stat === "granted");
     })();
   }, []);
 
@@ -80,7 +82,7 @@ const CreatePostsScreen = ({ navigation }) => {
       try {
         await MediaLibrary.createAssetAsync(photo);
         setPhoto(null);
-        Alert.alert("Фото успешно сохранено!");
+        Alert.alert("Фото успешно сохранено в галерею!");
       } catch (e) {
         console.log(e);
       }
@@ -88,66 +90,112 @@ const CreatePostsScreen = ({ navigation }) => {
   };
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setCameraOn(false);
-      setPhoto(result.assets[0].uri);
-      let location = await Location.getCurrentPositionAsync({});
-      const coords = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-      setLoc(coords);
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      if (!result.canceled) {
+        setCameraOn(false);
+        setPhoto(result.assets[0].uri);
+        let location = await Location.getCurrentPositionAsync({});
+        const coords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+        setLoc(coords);
+      }
+    } catch (e) {
+      console.log(e);
     }
   };
 
+  const uploadPhotoToServer = async () => {
+    if (!photo || !loc) {
+      Alert.alert("Что то пошло не так :( Сделайте фото ещё раз");
+      return;
+    }
+    try {
+      const response = await fetch(photo);
+      const file = await response.blob();
+      const uniquePostId = Date.now().toString();
+      const storageRef = ref(storage, `postImage/${uniquePostId}`);
+      await uploadBytes(storageRef, file);
+      const processedPhoto = await getDownloadURL(
+        ref(storage, `postImage/${uniquePostId}`)
+      );
+      return processedPhoto;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const uploadPostToServer = async () => {
+    try {
+      const photo = await uploadPhotoToServer();
+      const date = new Date().toLocaleString();
+      console.log(date);
+      if (loc) {
+        const createPost = await addDoc(collection(db, "posts"), {
+          userId,
+          nickName,
+          photo,
+          name,
+          place,
+          loc,
+          date,
+          likes: [],
+        });
+        console.log("Document written with ID: ", createPost.id);
+      } else {
+        Alert.alert("Что то пошло не так :( Сделайте фото ещё раз");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const resetState = () => {
+    setPhoto(null);
+    setLoc(null);
+    setName("");
+    setPlace(null);
+  };
+
   const sendPhoto = () => {
+    uploadPostToServer();
     if (photo && loc) {
-      const post = { photo, name, place, loc };
-      navigation.navigate("DefaultScreen", { post });
-      setPhoto(null);
-      setLoc(null);
-      setName("");
-      setPlace(null);
+      navigation.navigate("DefaultScreen");
+      resetState();
       cameraReady();
     }
   };
 
-  const deletePhoto = () => {
-    setName("");
-    setPlace(null);
-    setPhoto(null);
-    setLoc(null);
-  };
-
   return (
     <>
-      <TouchableWithoutFeedback
-        onPress={() => {
-          navigation.navigate("Posts");
-          cameraReady();
-        }}
-      >
-        <View
-          style={{
-            position: "absolute",
-            top: -38,
-            zIndex: 100,
-            paddingHorizontal: 15,
+      <View style={styles.header}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            navigation.navigate("Posts");
+            cameraReady();
           }}
         >
-          <Image
-            source={require("../../assets/images/arrow-left.png")}
-            style={{ width: 23, height: 23 }}
-          />
-        </View>
-      </TouchableWithoutFeedback>
+          <View
+            style={{
+              paddingHorizontal: 15,
+              paddingVertical: 14,
+            }}
+          >
+            <Image
+              source={require("../../assets/images/arrow-left.png")}
+              style={{ width: 23, height: 23 }}
+            />
+          </View>
+        </TouchableWithoutFeedback>
+        <Text style={styles.headerText}>Создать публикацию</Text>
+      </View>
       <ScrollView style={styles.container}>
         {cameraOn ? (
           <Camera style={styles.camera} ref={cameraRef}>
@@ -253,7 +301,7 @@ const CreatePostsScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.delBtnBox}
           activeOpacity={0.7}
-          onPress={deletePhoto}
+          onPress={resetState}
         >
           <View
             style={
@@ -281,6 +329,21 @@ const CreatePostsScreen = ({ navigation }) => {
 export default CreatePostsScreen;
 
 const styles = StyleSheet.create({
+  header: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    height: 90,
+    borderBottomWidth: 2,
+    borderBottomColor: "#E8E8E8",
+    backgroundColor: "#fff",
+  },
+  headerText: {
+    marginBottom: 15,
+    marginLeft: 20,
+    fontFamily: "Roboto-Bold",
+    fontSize: 17,
+  },
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
@@ -335,7 +398,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF6C00",
     height: 50,
     borderRadius: 100,
-    marginTop: 27,
+    marginTop: 20,
     justifyContent: "center",
     alignItems: "center",
   },

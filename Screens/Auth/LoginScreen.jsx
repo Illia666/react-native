@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import {
   StyleSheet,
   View,
@@ -10,10 +11,9 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ImageBackground,
-  ScrollView,
 } from "react-native";
 
-import { Button } from "react-native-web";
+import { authSingInUser } from "../../redux/auth/authOperations";
 
 const LoginScreen = ({ navigation }) => {
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
@@ -22,8 +22,24 @@ const LoginScreen = ({ navigation }) => {
   const [error, setError] = useState(null);
   const [hidePass, setHidePass] = useState(true);
 
+  const dispatch = useDispatch();
+
   const emailHandler = (text) => setEmail(text);
   const passwordHandler = (text) => setPassword(text);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setIsShowKeyboard(true);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setIsShowKeyboard(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const onLogin = () => {
     if (email.trim() === "" || password.trim() === "") {
@@ -31,9 +47,9 @@ const LoginScreen = ({ navigation }) => {
     } else {
       setError(null);
       const user = { email, password };
+      dispatch(authSingInUser(user));
       setEmail("");
       setPassword("");
-      navigation.navigate("Home", { screen: "DefaultScreen", params: user });
     }
   };
 
